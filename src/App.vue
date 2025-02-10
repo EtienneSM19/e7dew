@@ -1,16 +1,25 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import codes from '../data/codes.json';
 const userName = ref ('Etienne');
 
 const selectedCountries = ref([]);
 const countryNames = ref({});
+let countryData = ref(null);
+const divCountryData = document.querySelector('.country-data');
 
 onMounted(async () => {
   const res = await fetch('http://localhost:3000/api/names');
   countryNames.value = await res.json();
 })
 
+const sortedSelectedCountries = computed(() => {
+  return selectedCountries.value.slice().sort((a, b) => {
+    const nameA = countryNames.value[a]?.toLowerCase() || '';
+    const nameB = countryNames.value[b]?.toLowerCase() || '';
+    return nameA.localeCompare(nameB);
+  });
+});
 
 function selectCountry(code) {
   if(!selectedCountries.value.includes(code)){
@@ -25,8 +34,7 @@ function discardCountry(code) {
 async function fetchCountryData(code) {
   try {
     const response = await fetch('http://localhost:3000/api/country/' + code);
-    const data = await response.json();
-    console.log(data);
+    countryData.value = await response.json();
   } catch (e) {
     console.log('Pais no encontrado');
   }
@@ -53,15 +61,22 @@ async function fetchCountryData(code) {
       </ul>
     </div>
     <div class="selected">
-      <h1>Seleccionados ({{ selectedCountries.length }}):</h1>
+      <h1>Seleccionados ({{ sortedSelectedCountries.length }}):</h1>
       <ul>
-        <li v-for="code in selectedCountries" :key="code"
+        <li v-for="code in sortedSelectedCountries" :key="code"
         @click="fetchCountryData(code)">{{ countryNames[code] }}
         <button @click="discardCountry(code)">Desmarcar</button>
         </li>
       </ul>
     </div>
-    <div class="country-data"></div>
+    <div class="country-data">
+      <div>Nombre: </div>
+      <div>PIB: </div>
+      <div>Renta: </div>
+      <div>Población: </div>
+      <div>Área:</div>
+      <div>PIB/habitante</div>
+    </div>
     <div class="options"></div>
     <div class="chart"></div>
   </div>

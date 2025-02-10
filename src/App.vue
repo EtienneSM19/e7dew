@@ -35,6 +35,7 @@ async function fetchCountryData(code) {
   try {
     const response = await fetch('http://localhost:3000/api/country/' + code);
     countryData.value = await response.json();
+    console.log(countryData.value);
   } catch (e) {
     console.log('Pais no encontrado');
   }
@@ -70,12 +71,26 @@ async function fetchCountryData(code) {
       </ul>
     </div>
     <div class="country-data">
-      <div>Nombre: </div>
-      <div>PIB: </div>
-      <div>Renta: </div>
-      <div>Población: </div>
-      <div>Área:</div>
-      <div>PIB/habitante</div>
+      <table>
+        <tr>
+          <th>Nombre:</th>
+          <td></td>
+          <th>Población</th>
+          <td></td>
+        </tr>
+        <tr>
+          <th>PIB</th>
+          <td></td>
+          <th>Área</th>
+          <td></td>
+        </tr>
+        <tr>
+          <th>Renta</th>
+          <td></td>
+          <th>PIB/Habitante</th>
+          <td></td>
+        </tr>
+      </table>
     </div>
     <div class="options"></div>
     <div class="chart"></div>

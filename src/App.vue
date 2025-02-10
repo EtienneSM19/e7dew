@@ -1,9 +1,16 @@
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import codes from '../data/codes.json';
 const userName = ref ('Etienne');
 
 const selectedCountries = ref([]);
+const countryNames = ref({});
+
+onMounted(async () => {
+  const res = await fetch('http://localhost:3000/api/names');
+  countryNames.value = await res.json();
+})
+
 
 function selectCountry(code) {
   if(!selectedCountries.value.includes(code)){
@@ -19,11 +26,7 @@ async function fetchCountryData(code) {
   try {
     const response = await fetch('http://localhost:3000/api/country/' + code);
     const data = await response.json();
-    if(!response.ok){
-      console.error('Pais no encontrado');
-    } else {
-      console.log(data);
-    }
+    console.log(data);
   } catch (e) {
     console.log('Pais no encontrado');
   }
@@ -46,14 +49,14 @@ async function fetchCountryData(code) {
     <div class="div-codes">
       <h1>Códigos:</h1>
       <ul>
-        <li v-for="code in codes" :key="code" @click="selectCountry(code)">{{ code }}</li>
+        <li v-for="code in codes" :key="code" @click="selectCountry(code)">{{ countryNames[code] }}</li>
       </ul>
     </div>
     <div class="selected">
       <h1>Seleccionados ({{ selectedCountries.length }}):</h1>
       <ul>
         <li v-for="code in selectedCountries" :key="code"
-        @click="fetchCountryData(code)">{{ code }}
+        @click="fetchCountryData(code)">{{ countryNames[code] }}
         <button @click="discardCountry(code)">Desmarcar</button>
         </li>
       </ul>

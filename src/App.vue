@@ -1,6 +1,34 @@
 <script setup>
 import { ref } from 'vue';
-const userName = ref ('examen tema 7');
+import codes from '../data/codes.json';
+const userName = ref ('Etienne');
+
+const selectedCountries = ref([]);
+
+function selectCountry(code) {
+  if(!selectedCountries.value.includes(code)){
+    selectedCountries.value.push(code);
+  }
+}
+
+function discardCountry(code) {
+  selectedCountries.value = selectedCountries.value.filter(c => c !== code);
+}
+
+async function fetchCountryData(code) {
+  try {
+    const response = await fetch('http://localhost:3000/api/country/' + code);
+    const data = await response.json();
+    if(!response.ok){
+      console.error('Pais no encontrado');
+    } else {
+      console.log(data);
+    }
+  } catch (e) {
+    console.log('Pais no encontrado');
+  }
+}
+
 </script>
 
 <template>
@@ -15,8 +43,21 @@ const userName = ref ('examen tema 7');
       </label>
       <p>Tu nombre <b>{{ userName }}</b> tiene <b>{{ userName.length }}</b> carácteres</p>
     </div>
-    <div class="div-codes"></div>
-    <div class="selected"></div>
+    <div class="div-codes">
+      <h1>Códigos:</h1>
+      <ul>
+        <li v-for="code in codes" :key="code" @click="selectCountry(code)">{{ code }}</li>
+      </ul>
+    </div>
+    <div class="selected">
+      <h1>Seleccionados ({{ selectedCountries.length }}):</h1>
+      <ul>
+        <li v-for="code in selectedCountries" :key="code"
+        @click="fetchCountryData(code)">{{ code }}
+        <button @click="discardCountry(code)">Desmarcar</button>
+        </li>
+      </ul>
+    </div>
     <div class="country-data"></div>
     <div class="options"></div>
     <div class="chart"></div>

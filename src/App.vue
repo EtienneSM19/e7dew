@@ -1,17 +1,25 @@
 <script setup>
 import { onMounted, ref, computed } from 'vue';
 import codes from '../data/codes.json';
-const userName = ref ('Etienne');
+import CountryData from './components/CountryData.vue';
+import GoogleChart from './components/GoogleChart.vue';
 
+const userName = ref ('Etienne');
 const selectedCountries = ref([]);
 const countryNames = ref({});
 let countryData = ref(null);
-const divCountryData = document.querySelector('.country-data');
+const dataTypes = ['population', 'pib', 'area', 'income'];
 
 onMounted(async () => {
   const res = await fetch('http://localhost:3000/api/names');
   countryNames.value = await res.json();
 })
+
+function selectCountry(code) {
+  if(!selectedCountries.value.includes(code)){
+    selectedCountries.value.push(code);
+  }
+}
 
 const sortedSelectedCountries = computed(() => {
   return selectedCountries.value.slice().sort((a, b) => {
@@ -21,14 +29,9 @@ const sortedSelectedCountries = computed(() => {
   });
 });
 
-function selectCountry(code) {
-  if(!selectedCountries.value.includes(code)){
-    selectedCountries.value.push(code);
-  }
-}
-
 function discardCountry(code) {
-  selectedCountries.value = selectedCountries.value.filter(c => c !== code);
+  selectedCountries.value = 
+  selectedCountries.value.filter(c => c !== code);
 }
 
 async function fetchCountryData(code) {
@@ -41,6 +44,16 @@ async function fetchCountryData(code) {
   }
 }
 
+async function removeCountry(code) {
+  const res = await fetch('http://localhost:3000/api/country/' + code, {
+    method: 'DELETE'
+  })
+  if(!res.ok){
+    console.log('Pais no encontrado');
+  }
+  selectedCountries.value = selectedCountries.value.filter(c => c !== code);
+  countryData.value = null;
+}
 </script>
 
 <template>
@@ -64,36 +77,26 @@ async function fetchCountryData(code) {
     <div class="selected">
       <h1>Seleccionados ({{ sortedSelectedCountries.length }}):</h1>
       <ul>
-        <li v-for="code in sortedSelectedCountries" :key="code"
-        @click="fetchCountryData(code)">{{ countryNames[code] }}
+        <li v-for="code in sortedSelectedCountries" :key="code">
+        <span @click="fetchCountryData(code)">{{ countryNames[code] }}</span>
         <button @click="discardCountry(code)">Desmarcar</button>
-        </li>
+      </li>
       </ul>
     </div>
     <div class="country-data">
-      <table>
-        <tr>
-          <th>Nombre:</th>
-          <td></td>
-          <th>Población</th>
-          <td></td>
-        </tr>
-        <tr>
-          <th>PIB</th>
-          <td></td>
-          <th>Área</th>
-          <td></td>
-        </tr>
-        <tr>
-          <th>Renta</th>
-          <td></td>
-          <th>PIB/Habitante</th>
-          <td></td>
-        </tr>
-      </table>
+      <h1>Datos del país</h1>
+      <CountryData 
+      :data="countryData"
+      @removeCountry="removeCountry"/>
     </div>
-    <div class="options"></div>
-    <div class="chart"></div>
+    <div class="options">
+
+    </div>
+    <div class="chart">
+      <GoogleChart>
+        
+      </GoogleChart>
+    </div>
   </div>
 </template>
 
@@ -101,6 +104,13 @@ async function fetchCountryData(code) {
 * {
   color: black;
 }
+
+.data-item {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  margin: 0.5rem;
+}
+
 .parent {
   display: grid;
   grid-template-columns: repeat(5, 1fr);

@@ -1,14 +1,17 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref, computed, reactive } from 'vue';
 import codes from '../data/codes.json';
 import CountryData from './components/CountryData.vue';
 import GoogleChart from './components/GoogleChart.vue';
 
 const userName = ref ('Etienne');
 const selectedCountries = ref([]);
+const selectedCountriesData = reactive({});
 const countryNames = ref({});
 let countryData = ref(null);
 const dataTypes = ['population', 'pib', 'area', 'income'];
+const selectedDataType = ref('population');
+
 
 onMounted(async () => {
   const res = await fetch('http://localhost:3000/api/names');
@@ -29,9 +32,22 @@ const sortedSelectedCountries = computed(() => {
   });
 });
 
+const countryChart = computed(() => {
+  const res = [
+    ["país", selectedDataType.value],
+    ...sortedSelectedCountries.value.map((code) => {
+      const country = countryNames.value[code] || code;
+      const data = selectedCountriesData[code];
+      return [country, data ? data[selectedDataType.value] : 0];
+    }),
+  ];
+  console.log(res);
+  return res;
+})
+
 function discardCountry(code) {
-  selectedCountries.value = 
-  selectedCountries.value.filter(c => c !== code);
+  selectedCountries.value = selectedCountries.value.filter(c => c !== code);
+  countryData.value = null;
 }
 
 async function fetchCountryData(code) {
@@ -39,21 +55,23 @@ async function fetchCountryData(code) {
     const response = await fetch('http://localhost:3000/api/country/' + code);
     countryData.value = await response.json();
     console.log(countryData.value);
+    selectedCountriesData[code] = countryData.value;
   } catch (e) {
     console.log('Pais no encontrado');
   }
-}
+};
 
 async function removeCountry(code) {
   const res = await fetch('http://localhost:3000/api/country/' + code, {
     method: 'DELETE'
-  })
+  });
   if(!res.ok){
     console.log('Pais no encontrado');
   }
   selectedCountries.value = selectedCountries.value.filter(c => c !== code);
   countryData.value = null;
 }
+
 </script>
 
 <template>
@@ -90,11 +108,14 @@ async function removeCountry(code) {
       @removeCountry="removeCountry"/>
     </div>
     <div class="options">
-
+      <label v-for="type in dataTypes" :key="type">
+        <input type="radio" :value="type" v-model="selectedDataType" name="type"/>
+        {{ type }}
+      </label>
     </div>
     <div class="chart">
-      <GoogleChart>
-        
+      <GoogleChart
+      :data="countryChart">
       </GoogleChart>
     </div>
   </div>
